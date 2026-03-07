@@ -1,6 +1,13 @@
 # Push this project to GitHub
 
-Repo: **https://github.com/jonah-davis/COGS-189-Group-Project-WI26**
+**Upstream (group):** https://github.com/jonah-davis/COGS-189-Group-Project-WI26  
+**Your fork (push here):** https://github.com/vssb4214/COGS-189-Group-Project-WI26
+
+## One-time: create your fork
+
+1. Open **https://github.com/jonah-davis/COGS-189-Group-Project-WI26**
+2. Click **Fork** (top right) → create fork under your account (`vssb4214`).
+3. Then push (see below).
 
 ## One-time: fix Git (if you see Xcode license error)
 
@@ -23,6 +30,17 @@ git push -u origin main --force
 ```
 
 (`--force` replaces the current repo contents with this project.)
+
+## Push to your fork (recommended)
+
+After creating the fork (see above), run:
+
+```bash
+cd "/Users/surajbendi/cogs 189"
+git push -u myfork main
+```
+
+(`myfork` is already set to `https://github.com/vssb4214/COGS-189-Group-Project-WI26.git`.)
 
 ## Option B — Clone repo, copy project in, then push
 
