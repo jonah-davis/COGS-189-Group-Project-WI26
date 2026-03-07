@@ -1,0 +1,14 @@
+{
+  "InstitutionAddress": "10700 104 Ave NW, Edmonton, AB",
+  "InstitutionName": "MacEwan University",
+  "InstitutionalDepartmentName": "Department of Psychology",
+  "PowerLineFrequency": 60,
+  "ManufacturersModelName": "actiCHamp",
+  "TaskName": "songfamiliarity",
+  "EEGChannelCount": 32,
+  "EEGReference": "common",
+  "RecordingType": "continuous",
+  "RecordingDuration": 2000.6,
+  "SamplingFrequency": 1000,
+  "SoftwareFilters": "n/a"
+}

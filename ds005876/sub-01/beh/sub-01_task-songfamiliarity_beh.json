@@ -1,0 +1,68 @@
+{
+  "block": {
+    "Description": "Trial number (integer)"
+  },
+  "songNumber": {
+    "Description": "Song number (integer)"
+  },
+  "songFileName": {
+    "Description": "Song file name (string)"
+  },
+  "songDur": {
+    "Description": "Song duration (float)",
+    "Units": "seconds"
+  },
+  "fixTime": {
+    "Description": "Duration of fixation cross (float)",
+    "Units": "seconds"
+  },
+  "responded": {
+    "Description": "Whether or not there was a response (boolean)"
+  },
+  "Levels": {
+    "x0": "No response",
+    "x1": "Response"
+  },
+  "rt": {
+    "Description": "Response time (float)",
+    "Units": "seconds"
+  },
+  "postMusicTime": {
+    "Description": "Delay after button press, but before prompt (float)",
+    "Units": "seconds"
+  },
+  "reply": {
+    "Description": "Participant response to song prompt (string)"
+  },
+  "promptRT": {
+    "Description": "Duration from start of prompt to return-button press (float)",
+    "Units": "seconds"
+  },
+  "choicesMC": {
+    "Description": "Multiple choice song numbers (string)"
+  },
+  "respMC": {
+    "Description": "Multiple choice response (integer)",
+    "Levels": {
+      "x1": "First option",
+      "x2": "Second option",
+      "x3": "Third option",
+      "x4": "Fourth option"
+    }
+  },
+  "rtMC": {
+    "Description": "Multiple choice response time (float)",
+    "Units": "seconds"
+  },
+  "outcomeMC": {
+    "Description": "Multiple choice outcome (integer)",
+    "Levels": {
+      "x0": "Incorrect choice",
+      "x1": "Correct choice"
+    }
+  },
+  "preFeedbackTime": {
+    "Description": "Duration from multiple choice response to feedback (float)",
+    "Units": "seconds"
+  }
+}
