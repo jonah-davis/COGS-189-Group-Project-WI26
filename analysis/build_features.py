@@ -108,6 +108,22 @@ def main() -> None:
     merge_cols = ["participant_id", "age", "sex", "handedness"]
     trial_features = beh.merge(participants[merge_cols], on="participant_id", how="left")
 
+    # Merge EEG band-power features if available
+    eeg_path = OUT_DIR / "eeg_features.csv"
+    if eeg_path.exists():
+        eeg = pd.read_csv(eeg_path)
+        if len(eeg) > 0 and "trial_index" in eeg.columns:
+            trial_features["trial_index"] = trial_features["trialNum"] - 1
+            eeg_cols = [c for c in eeg.columns if c not in ("participant_id", "trial_index")]
+            if eeg_cols:
+                trial_features = trial_features.merge(
+                    eeg[["participant_id", "trial_index"] + eeg_cols],
+                    on=["participant_id", "trial_index"],
+                    how="left",
+                )
+            trial_features = trial_features.drop(columns=["trial_index"], errors="ignore")
+            print(f"Merged EEG features: {eeg_cols}")
+
     out_path = OUT_DIR / "trial_features.csv"
     trial_features.to_csv(out_path, index=False)
     print(f"Saved {len(trial_features)} rows to {out_path}")

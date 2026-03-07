@@ -9,7 +9,7 @@
 
 Recognizing a familiar melody is a rapid, often automatic process. Understanding which factors shorten or lengthen the time until recognition can inform theories of memory retrieval and auditory cognition, and has practical relevance for interfaces and content design. In this project we asked: **What factors predict how quickly a listener will indicate that a song sounds familiar?**
 
-We used the **Song Familiarity** EEG dataset (OpenNeuro ds005876), in which participants listened to melody clips and pressed a key when the song felt familiar, then identified the song. Our goal was to build a predictive model of **recognition time** (RT) from factors such as **song duration**, **stimulus-derived acoustic structure** (operationalized via note-onset density from experiment events), and **participant demographics**. We focused on a software-based analysis of behavioral and event data; the dataset also contains raw EEG, which we did not analyze in this iteration.
+We used the **Song Familiarity** EEG dataset (OpenNeuro ds005876), in which participants listened to melody clips and pressed a key when the song felt familiar, then identified the song. Our goal was to build a predictive model of **recognition time** (RT) from factors such as **song duration**, **stimulus-derived structure** (note-onset density from experiment events), **participant demographics**, and **EEG-derived band power** (delta, theta, alpha, beta) from the first 2 s of each trial when raw EEG data are available.
 
 ---
 
@@ -21,7 +21,7 @@ We used the **Song Familiarity** EEG dataset (OpenNeuro ds005876), in which part
 
 - **EEG and music.** Recent work has used EEG to study neural correlates of music perception and familiarity (e.g., familiarity-related ERP components, neural entrainment to rhythm). Our project complements such work by focusing on *behavioral* predictors of recognition time; a natural extension would be to add EEG-derived features (e.g., band power, ERPs) as predictors.
 
-- **OpenNeuro ds005876.** The dataset (Girard, Bishop, Hassall; BIDS 1.8.0) provides behavioral responses, event timing (including note onsets), and raw EEG. We used the behavioral files and event files to build trial-level features; we did not use raw EEG or derivative audio in this analysis.
+- **OpenNeuro ds005876.** The dataset (Girard, Bishop, Hassall; BIDS 1.8.0) provides behavioral responses, event timing (including note onsets), and raw EEG (32 channels, 1000 Hz, EEGLAB format). Our pipeline uses behavioral and event data for all runs, and adds EEG band-power features when the raw .set/.fdt files are available (e.g., after downloading via DataLad or OpenNeuro).
 
 ---
 
@@ -34,15 +34,17 @@ We used the **Song Familiarity** EEG dataset (OpenNeuro ds005876), in which part
 - **Design:** Each participant completed multiple trials. On each trial, a melody played; participants pressed the spacebar when the song felt familiar (familiarity RT), then identified the song (free recall and multiple choice).  
 - **Outcome:** We predicted **familiarity response time (RT)** in seconds, using only trials where the participant responded (i.e., indicated familiarity). Non-responses were excluded from the regression.  
 - **Behavioral variables:** From each subject’s `*_beh.tsv`: trial number, song identifier, song duration (`songDur`), whether they responded (`responded`), RT (`rt`), and demographics from `participants.tsv` (age, sex, handedness).  
-- **Event-derived features:** From each subject’s `*_events.tsv` we identified trial boundaries (event value 1 with stimulus filename) and counted **note onsets** (`noteOnset`) within each trial. We defined **note count** (number of note onsets per trial) and **note rate** (note count divided by trial duration in seconds) as proxies for melodic density/tempo.
+- **Event-derived features:** From each subject’s `*_events.tsv` we identified trial boundaries (event value 1 with stimulus filename) and counted **note onsets** (`noteOnset`) within each trial. We defined **note count** and **note rate** (notes per second) as proxies for melodic density/tempo.  
+- **EEG-derived features (optional):** When raw EEG (`.set`/`.fdt`) are on disk, we run `extract_eeg_features.py`: load continuous EEG with MNE-Python, epoch the first 2 s of each trial from song onset, compute power spectral density (Welch), and average power in four bands—**delta** (1–4 Hz), **theta** (4–8 Hz), **alpha** (8–13 Hz), **beta** (13–30 Hz)—averaged across channels. These are merged onto the trial table by participant and trial index.
 
 ### 3.2 Data Pipeline and Feature Construction
 
 1. **Behavioral loading:** All `sub-*/beh/*_beh.tsv` files were concatenated with a participant ID.  
 2. **Event processing:** For each participant, we parsed the corresponding `*_events.tsv`, segmented trials by trial-start events, and counted note onsets per trial. We merged these counts (and derived note rate) onto the behavioral table by participant and trial order.  
-3. **Numeric RT:** The `rt` column contains `"n/a"` when the participant did not respond; we coerced it to numeric and dropped rows with missing RT for modeling.  
-4. **Predictors:** Final feature set: **songDur**, **note_count**, **note_rate**, **age**, **sex**, **handedness**. Sex and handedness were one-hot encoded (reference categories: F, L).  
-5. **Missing values:** Missing numeric features were filled with the median per column.
+3. **EEG features (optional):** If `eeg_features.csv` exists (from `extract_eeg_features.py`), we merge delta, theta, alpha, and beta power onto the trial table.  
+4. **Numeric RT:** The `rt` column contains `"n/a"` when the participant did not respond; we coerced it to numeric and dropped rows with missing RT for modeling.  
+5. **Predictors:** Final feature set: **songDur**, **note_count**, **note_rate**, **age**, **sex**, **handedness**, and when available **delta**, **theta**, **alpha**, **beta**. Sex and handedness were one-hot encoded (reference categories: F, L).  
+6. **Missing values:** Missing numeric features were filled with the median per column.
 
 ### 3.3 Models and Evaluation
 
@@ -52,9 +54,9 @@ We used the **Song Familiarity** EEG dataset (OpenNeuro ds005876), in which part
 
 ### 3.4 Reproducibility
 
-- Code: `analysis/build_features.py` (feature construction), `analysis/train_model.py` (training and CV).  
-- Input: `ds005876/` (BIDS layout).  
-- Output: `analysis/trial_features.csv`, `analysis/model_results.txt`, and coefficient/importance tables.
+- Code: `analysis/extract_eeg_features.py` (EEG band power when data on disk), `analysis/build_features.py` (feature construction), `analysis/train_model.py` (training and CV).  
+- Input: `ds005876/` (BIDS layout). EEG data (`.set`/`.fdt`) must be retrieved (e.g. `git annex get` in a DataLad clone, or download from OpenNeuro) for EEG features to be included.  
+- Output: `analysis/eeg_features.csv` (if EEG run), `analysis/trial_features.csv`, `analysis/model_results.txt`, and coefficient/importance tables.
 
 ---
 
@@ -84,8 +86,9 @@ So, in this dataset, **song length** and **participant age** were the main behav
 
 ### 4.4 What Worked and What Did Not
 
-- **Worked:** Building a reproducible pipeline from BIDS behavioral and event files; extracting note-onset-based features without raw EEG; training and cross-validating regression models; obtaining interpretable feature weights.  
-- **Limitations:** We did not have access to (or did not use) raw EEG or derivative audio in the workspace, so we could not include **sound frequency** or **spectral** features. The project thus addressed “factors that influence recognition time” using **duration, event-derived note density, and demographics** rather than spectral content. Including spectral or EEG features would require loading continuous EEG and/or the dataset’s derivative audio.
+- **Worked:** Building a reproducible pipeline from BIDS behavioral and event files; extracting note-onset-based features; implementing EEG band-power extraction (MNE-Python, 2 s epochs, delta/theta/alpha/beta) and integrating it into the feature table when raw EEG is available; training and cross-validating regression models; obtaining interpretable feature weights.  
+- **Reported results:** The performance and feature importance reported above used only behavioral and event-derived predictors, because the EEG files in our working copy were not fully retrieved (Git annex). When EEG data are downloaded and `extract_eeg_features.py` is run, the same pipeline produces band-power features and the model uses them automatically.  
+- **Limitations:** We did not use derivative audio for stimulus-level spectral features. Adding stimulus frequency content would require the dataset’s derivative audio or external spectral analysis.
 
 ---
 
@@ -104,7 +107,7 @@ So, in this dataset, **song length** and **participant age** were the main behav
 
 ### 5.3 Extensions and Future Work
 
-1. **Include EEG-derived and/or spectral features.** Adding band power (e.g., theta, alpha) or ERP measures in the pre-response window, and/or spectral features from the derivative audio, could improve prediction and directly address “sound frequencies” as a factor. This would require loading continuous EEG (e.g., MNE-Python) and aligning events to the time series.  
+1. **Expand EEG features.** We now include band power (delta, theta, alpha, beta) from the first 2 s of each trial when EEG is available. Extensions could add ERP components (e.g., P300) in the pre-response window, or longer or variable-length epochs, to capture neural correlates of recognition more directly.  
 2. **Song identity and familiarity strength.** Including song ID (or a subject-specific familiarity rating) could capture which melodies are recognized faster across participants. One could also model trial-level accuracy (e.g., multiple-choice outcome) as a secondary outcome or predictor.
 
 ---

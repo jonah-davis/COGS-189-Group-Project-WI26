@@ -27,12 +27,14 @@ def load_modeling_data() -> tuple[pd.DataFrame, pd.Series]:
 
 def get_feature_matrix(df: pd.DataFrame) -> tuple[pd.DataFrame, list]:
     """
-    Build feature matrix. Numeric: songDur, note_count, note_rate, age.
-    Categorical: sex, handedness. Optionally songFileName (many levels) — we skip for baseline.
+    Build feature matrix. Numeric: songDur, note_count, note_rate, age, and EEG bands if present.
+    Categorical: sex, handedness.
     """
-    numeric_cols = ["songDur", "note_count", "note_rate", "age"]
+    base_numeric = ["songDur", "note_count", "note_rate", "age"]
+    eeg_bands = [c for c in ("delta", "theta", "alpha", "beta") if c in df.columns]
+    numeric_cols = base_numeric + eeg_bands
     cat_cols = ["sex", "handedness"]
-    for c in numeric_cols:
+    for c in base_numeric:
         if c not in df.columns:
             raise ValueError(f"Missing column: {c}")
     X_num = df[numeric_cols].copy()
