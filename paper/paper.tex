@@ -1,0 +1,66 @@
+\documentclass[a4paper]{article}
+
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+
+\usepackage[english]{babel}
+\usepackage{csquotes}
+\usepackage{graphicx}
+
+\usepackage[notes,backend=biber]{biblatex-chicago}
+\bibliography{sample}
+
+\begin{document}
+\title{COGS 189: Final Paper}
+\author{Jonah Davis, Audrey La Guardia, Suraj Bendi, Roselyn Gonzalez}
+\maketitle
+
+\begin{abstract}
+Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. 
+\end{abstract}
+
+\section{Introduction}
+
+What were you trying to do  and WHY? or full points clearly state the problem and why it is important. (approx 2 points)
+
+
+\subsection{Motivation}
+
+
+\section{Literature Review}
+Music cognition research increasingly frames listening as a predictive process whereby the brain continuously generates expectations about future auditory structure. In the neuroscience literature, this idea is supported by EEG and ERP work, which shows that violations of musical regularities elicit early right anterior negativity (ERAN) which lends credence to the notion that song prediction is an anticipatory process rather than a pattern-matching one\autocite{koelsch2011neuralbasis}. This predictive account is corroborated by Markovian models which argue that melodic expectation is shaped by statistical learning, predicated on previous exposure \autocite{rohrmeierkoelsch2012predictive}.
+
+Localized ECoG studies make this connection especially relevant for BCI-oriented work by showing that neural activity during naturalistic music listening engages predictive neural processing (e.g., Cortical responses in the auditory regions of the planum temporale and Heschl's gyrus were better explained when model-based features of melodic surprise and entropy were combined with acoustic ones.)\autocite{diliberto2020melodicexpectations}.
+
+As a precursor to our modeling approach, prior EEG work has also shown that discriminative spatial or spectral filtering methods can successfully classify internal states during auditory and music listening tasks. In an auditory attention setting, Yang et al.\ demonstrated that CSP-based pipelines paired with linear classifiers remain effective for decoding the directional focus of attention from EEG, supporting the use of CSP as a practical and interpretable feature extractor for auditory BCI problems \autocite{yang2023auditory}. In a music-listening context, Pan et al.\ similarly showed that EEG recorded during music exposure contains enough discriminative structure to classify listener preference using a common frequency pattern method inspired by CSP, providing a music-relevant precedent for feature-learning approaches that separate latent cognitive states from ongoing auditory signals \autocite{pan2013commonfrequencypattern}. Taken together, these studies provide methodological justification for our use of a CSP + LDA pipeline as a simple, established precursor for modeling song-related neural states from EEG.
+
+Related familiarity research further suggests that prior knowledge modulates temporal neural responses to music, with familiar and unfamiliar songs producing distinguishable entrainment and recognition-related patterns \autocite{kumagai2017familiarityentrainment}. In this context, the present project is well-motivated as an attempt to model song prediction from EEG as an online neural process shaped by both expectancy and the emergence of familiarity \autocite{girard2025songfamiliarity}.
+
+\section{Methods}
+What did you do?  Be as precise as you can.   For full credit there should be enough detail for someone relatively skilled to replicate your work.  (approx 7 points)
+
+\subsection{Data}
+Openneuro dataset \autocite{dataset}
+\subsection{Modeling Approach/Pipeline}
+
+\section{Results}
+We discovered What did you discover? How well did it work?  As this is a class project, it is likely that many things did not work as well as planned.  For this project, detailing what went wrong is as important as describing what went well.  (approx 7 points)
+
+\subsection{Descriptive Statistics}
+\subsection{Main Analysis}
+\subsection{Model results}
+
+
+\section{Discussion}
+Upon What did you learn?  What could you do better? (What would you
+have done next if you had more time)?.....  Why do you think it didn't work if it didn't?  
+If everything worked perfectly,  what next steps would you suggest for follow-up work.  For full credit discuss two extensions or improvements to your project with short justifications for why you think that would work better (improvements) or why they are promising extensions. (approx 7 points)
+
+\subsection{Limitations}
+
+\subsection{Future Work}
+
+\printbibliography
+
+\end{document}
