@@ -1,0 +1,89 @@
+\documentclass[tikz,border=10pt]{standalone}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning,fit,shapes.geometric,backgrounds,calc}
+
+\definecolor{datasetblue}{HTML}{D7E8F7}
+\definecolor{processgreen}{HTML}{DCEED1}
+\definecolor{artifactyellow}{HTML}{F7E8B2}
+\definecolor{modelrose}{HTML}{F2D7D5}
+\definecolor{evalgray}{HTML}{EAECEE}
+\definecolor{textnavy}{HTML}{17324D}
+\definecolor{lineblue}{HTML}{2C5D7C}
+
+\tikzset{
+  >={Latex[length=3mm]},
+  base/.style={
+    draw=lineblue,
+    very thick,
+    rounded corners=8pt,
+    align=center,
+    text=textnavy,
+    minimum width=3.35cm,
+    minimum height=1.25cm,
+    font=\sffamily\small
+  },
+  dataset/.style={base, fill=datasetblue},
+  process/.style={base, fill=processgreen},
+  artifact/.style={base, fill=artifactyellow},
+  model/.style={base, fill=modelrose},
+  eval/.style={base, fill=evalgray},
+  line/.style={->, very thick, draw=lineblue},
+  frame/.style={
+    draw=lineblue!70,
+    rounded corners=10pt,
+    dashed,
+    inner sep=0.25cm
+  }
+}
+
+\begin{document}
+\begin{tikzpicture}[node distance=1.05cm and 1.15cm]
+  \node[dataset] (raw) {Notebook inputs\\Raw EEG, event tables,\\analysis-ready trial labels};
+
+  \node[process, below=of raw] (epoch) {Stimulus-locked preprocessing\\band-pass 1--30 Hz\\resample to 128 Hz\\2 s epochs per trial};
+  \node[artifact, below=of epoch] (cache) {Epoch cache\\trial x channel x time tensor\\labels, groups, trial index};
+
+  \node[process, below left=1.6cm and 1.5cm of cache] (inspect) {Pre-modeling EEG inspection\\participant class balance\\waveforms, GFP, topographies};
+  \node[artifact, below=of inspect] (inspectout) {Pre-modeling figures\\overview + MNE scalp maps};
+
+  \node[process, below=1.7cm of cache] (csp) {Feature engineering inside pipeline\\CSP spatial filters\\log-variance component features};
+  \node[model, below=of csp] (lda) {Classifier\\LDA with shrinkage};
+
+  \node[process, below right=1.6cm and 1.5cm of cache] (tune) {Grouped model selection\\StratifiedGroupKFold\\sweep CSP components\\2, 4, 6, 8, 10, 12};
+  \node[artifact, below=of tune] (tuneout) {Tuning outputs\\best component count\\grouped dummy vs model metrics};
+
+  \node[process, below=2.0cm of lda] (loso) {Generalization stress test\\Leave-one-subject-out\\out-of-fold probabilities};
+  \node[artifact, below left=1.4cm and 1.2cm of loso] (subjout) {Subject-level outputs\\LOSO table\\within-subject reference scores};
+  \node[artifact, below right=1.4cm and 1.2cm of loso] (predout) {Prediction outputs\\OOF prediction table\\ROC, confusion, probability plots};
+
+  \node[eval, below=2.0cm of loso] (summary) {Final notebook deliverables\\summary figure + interpretation\\cross-subject modellability};
+
+  \draw[line] (raw) -- (epoch);
+  \draw[line] (epoch) -- (cache);
+
+  \draw[line] (cache) -- (inspect);
+  \draw[line] (inspect) -- (inspectout);
+
+  \draw[line] (cache) -- (csp);
+  \draw[line] (csp) -- (lda);
+
+  \draw[line] (cache) -- (tune);
+  \draw[line] (tune) -- (tuneout);
+
+  \draw[line] (tuneout) |- (loso);
+  \draw[line] (lda) -- (loso);
+  \draw[line] (loso) -- (subjout);
+  \draw[line] (loso) -- (predout);
+  \draw[line] (inspectout) |- (summary);
+  \draw[line] (subjout) -- (summary);
+  \draw[line] (predout) -- (summary);
+
+  \begin{scope}[on background layer]
+    \node[frame, fit=(raw)(epoch)(cache), label={[font=\sffamily\bfseries\small,text=textnavy]above:Data processing}] {};
+    \node[frame, fit=(inspect)(inspectout)(csp)(lda)(tune)(tuneout), label={[font=\sffamily\bfseries\small,text=textnavy]above:Feature engineering and model selection}] {};
+    \node[frame, fit=(loso)(subjout)(predout)(summary), label={[font=\sffamily\bfseries\small,text=textnavy]above:Modeling, evaluation, and reporting}] {};
+  \end{scope}
+\end{tikzpicture}
+\end{document}
