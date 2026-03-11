@@ -45,45 +45,32 @@
   \node[process, below=of raw] (epoch) {Stimulus-locked preprocessing\\band-pass 1--30 Hz\\resample to 128 Hz\\2 s epochs per trial};
   \node[artifact, below=of epoch] (cache) {Epoch cache\\trial x channel x time tensor\\labels, groups, trial index};
 
-  \node[process, below left=1.6cm and 1.5cm of cache] (inspect) {Pre-modeling EEG inspection\\participant class balance\\waveforms, GFP, topographies};
-  \node[artifact, below=of inspect] (inspectout) {Pre-modeling figures\\overview + MNE scalp maps};
+  \node[process, below left=1.75cm and 1.5cm of cache] (groupcv) {Grouped model selection\\StratifiedGroupKFold\\participant-aware folds};
+  \node[process, below=1.7cm of cache] (csp) {Feature engineering\\CSP spatial filters\\log-variance component features};
+  \node[process, below right=1.75cm and 1.5cm of cache] (sweep) {Hyperparameter sweep\\compare 2, 4, 6, 8, 10, 12\\CSP components};
 
-  \node[process, below=1.7cm of cache] (csp) {Feature engineering inside pipeline\\CSP spatial filters\\log-variance component features};
   \node[model, below=of csp] (lda) {Classifier\\LDA with shrinkage};
-
-  \node[process, below right=1.6cm and 1.5cm of cache] (tune) {Grouped model selection\\StratifiedGroupKFold\\sweep CSP components\\2, 4, 6, 8, 10, 12};
-  \node[artifact, below=of tune] (tuneout) {Tuning outputs\\best component count\\grouped dummy vs model metrics};
-
-  \node[process, below=2.0cm of lda] (loso) {Generalization stress test\\Leave-one-subject-out\\out-of-fold probabilities};
-  \node[artifact, below left=1.4cm and 1.2cm of loso] (subjout) {Subject-level outputs\\LOSO table\\within-subject reference scores};
-  \node[artifact, below right=1.4cm and 1.2cm of loso] (predout) {Prediction outputs\\OOF prediction table\\ROC, confusion, probability plots};
-
-  \node[eval, below=2.0cm of loso] (summary) {Final notebook deliverables\\summary figure + interpretation\\cross-subject modellability};
+  \node[eval, below left=1.6cm and 1.3cm of lda] (groupmetrics) {Grouped evaluation\\dummy baseline vs CSP+LDA\\ROC AUC, accuracy, F1};
+  \node[eval, below=1.8cm of lda] (loso) {Generalization evaluation\\Leave-one-subject-out\\subject-wise held-out testing};
+  \node[eval, below right=1.6cm and 1.3cm of lda] (within) {Reference check\\within-subject CV\\for separability comparison};
 
   \draw[line] (raw) -- (epoch);
   \draw[line] (epoch) -- (cache);
 
-  \draw[line] (cache) -- (inspect);
-  \draw[line] (inspect) -- (inspectout);
-
   \draw[line] (cache) -- (csp);
+  \draw[line] (cache) -- (groupcv);
+  \draw[line] (cache) -- (sweep);
+  \draw[line] (groupcv) -- (sweep);
+  \draw[line] (sweep) -- (csp);
   \draw[line] (csp) -- (lda);
-
-  \draw[line] (cache) -- (tune);
-  \draw[line] (tune) -- (tuneout);
-
-  \draw[line] (tuneout) |- (loso);
+  \draw[line] (lda) -- (groupmetrics);
   \draw[line] (lda) -- (loso);
-  \draw[line] (loso) -- (subjout);
-  \draw[line] (loso) -- (predout);
-  \draw[line] (inspectout) |- (summary);
-  \draw[line] (subjout) -- (summary);
-  \draw[line] (predout) -- (summary);
+  \draw[line] (lda) -- (within);
 
   \begin{scope}[on background layer]
     \node[frame, fit=(raw)(epoch)(cache), label={[font=\sffamily\bfseries\small,text=textnavy]above:Data processing}] {};
-    \node[frame, fit=(inspect)(inspectout)(csp)(lda)(tune)(tuneout), label={[font=\sffamily\bfseries\small,text=textnavy]above:Feature engineering and model selection}] {};
-    \node[frame, fit=(loso)(subjout)(predout)(summary), label={[font=\sffamily\bfseries\small,text=textnavy]above:Modeling, evaluation, and reporting}] {};
+    \node[frame, fit=(groupcv)(csp)(sweep), label={[font=\sffamily\bfseries\small,text=textnavy]above:Feature engineering and model selection}] {};
+    \node[frame, fit=(lda)(groupmetrics)(loso)(within), label={[font=\sffamily\bfseries\small,text=textnavy]above:Modeling and evaluation}] {};
   \end{scope}
 \end{tikzpicture}
 \end{document}
