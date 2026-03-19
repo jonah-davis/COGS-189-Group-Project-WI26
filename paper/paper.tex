@@ -1,66 +1,175 @@
-\documentclass[a4paper]{article}
+\documentclass[11pt,a4paper]{article}
 
 \usepackage[T1]{fontenc}
 \usepackage[utf8]{inputenc}
 \usepackage{lmodern}
-
 \usepackage[english]{babel}
-\usepackage{csquotes}
-\usepackage{graphicx}
 
-\usepackage[notes,backend=biber]{biblatex-chicago}
-\bibliography{sample}
+\usepackage{geometry}
+\geometry{margin=1in}
+
+\usepackage{setspace}
+\usepackage{parskip}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{hyperref}
+\usepackage{enumitem}
+\usepackage{amsmath}
+
+\hypersetup{
+    colorlinks=true,
+    linkcolor=black,
+    urlcolor=blue,
+    citecolor=black
+}
+
+\title{\textbf{Predicting Song Familiarity Recognition Time from Behavioral and Stimulus-Derived Features}}
+\author{COGS 189 Final Project --- Winter 2026\\[0.5em]
+Jonah Davis \and Audrey La Guardia \and Suraj Bendi \and Roselyn Gonzalez}
+\date{}
 
 \begin{document}
-\title{COGS 189: Final Paper}
-\author{Jonah Davis, Audrey La Guardia, Suraj Bendi, Roselyn Gonzalez}
+
 \maketitle
 
-\begin{abstract}
-Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. 
-\end{abstract}
+\section{Introduction and Motivation}
 
-\section{Introduction}
+Recognizing a familiar melody is a rapid, often automatic process. Understanding which factors shorten or lengthen the time until recognition can inform theories of memory retrieval and auditory cognition, and has practical relevance for interfaces and content design. In this project we asked: \textbf{What factors predict how quickly a listener will indicate that a song sounds familiar?}
 
-What were you trying to do  and WHY? or full points clearly state the problem and why it is important. (approx 2 points)
+We used the \textbf{Song Familiarity} EEG dataset (OpenNeuro ds005876), in which participants listened to melody clips and pressed a key when the song felt familiar, then identified the song. Our goal was to build a predictive model of \textbf{recognition time} (RT) from factors such as \textbf{song duration}, \textbf{stimulus-derived structure} (note-onset density from experiment events), \textbf{participant demographics}, and \textbf{EEG-derived band power} (delta, theta, alpha, beta) from the first 2 seconds of each trial when raw EEG data are available.
 
+\section{Related Work}
 
-\subsection{Motivation}
+\begin{itemize}[leftmargin=*]
+    \item \textbf{Tip-of-the-tongue and familiarity.} The song familiarity paradigm is related to tip-of-the-tongue states and familiarity judgments in long-term memory. Class readings on memory and retrieval are relevant to why some stimuli are recognized faster than others.
 
+    \item \textbf{Kostic \& Cleary (2009).} The stimuli in ds005876 are drawn from the melody set used by Kostic and Cleary (see the supplement at \url{https://supp.apa.org/psycarticles/supplemental/a0014584/a0014584_supp.html}), who studied familiarity and recall for well-known melodies. Their work supports the use of these melodies as a standardized set for familiarity and recognition.
 
-\section{Literature Review}
-Music cognition research increasingly frames listening as a predictive process whereby the brain continuously generates expectations about future auditory structure. In the neuroscience literature, this idea is supported by EEG and ERP work, which shows that violations of musical regularities elicit early right anterior negativity (ERAN) which lends credence to the notion that song prediction is an anticipatory process rather than a pattern-matching one\autocite{koelsch2011neuralbasis}. This predictive account is corroborated by Markovian models which argue that melodic expectation is shaped by statistical learning, predicated on previous exposure \autocite{rohrmeierkoelsch2012predictive}.
+    \item \textbf{EEG and music.} Recent work has used EEG to study neural correlates of music perception and familiarity (e.g., familiarity-related ERP components, neural entrainment to rhythm). Our project complements such work by focusing on \emph{behavioral} predictors of recognition time; a natural extension would be to add EEG-derived features (e.g., band power, ERPs) as predictors.
 
-Localized ECoG studies make this connection especially relevant for BCI-oriented work by showing that neural activity during naturalistic music listening engages predictive neural processing (e.g., Cortical responses in the auditory regions of the planum temporale and Heschl's gyrus were better explained when model-based features of melodic surprise and entropy were combined with acoustic ones.)\autocite{diliberto2020melodicexpectations}.
-
-As a precursor to our modeling approach, prior EEG work has also shown that discriminative spatial or spectral filtering methods can successfully classify internal states during auditory and music listening tasks. In an auditory attention setting, Yang et al.\ demonstrated that CSP-based pipelines paired with linear classifiers remain effective for decoding the directional focus of attention from EEG, supporting the use of CSP as a practical and interpretable feature extractor for auditory BCI problems \autocite{yang2023auditory}. In a music-listening context, Pan et al.\ similarly showed that EEG recorded during music exposure contains enough discriminative structure to classify listener preference using a common frequency pattern method inspired by CSP, providing a music-relevant precedent for feature-learning approaches that separate latent cognitive states from ongoing auditory signals \autocite{pan2013commonfrequencypattern}. Taken together, these studies provide methodological justification for our use of a CSP + LDA pipeline as a simple, established precursor for modeling song-related neural states from EEG.
-
-Related familiarity research further suggests that prior knowledge modulates temporal neural responses to music, with familiar and unfamiliar songs producing distinguishable entrainment and recognition-related patterns \autocite{kumagai2017familiarityentrainment}. In this context, the present project is well-motivated as an attempt to model song prediction from EEG as an online neural process shaped by both expectancy and the emergence of familiarity \autocite{girard2025songfamiliarity}.
+    \item \textbf{OpenNeuro ds005876.} The dataset (Girard, Bishop, Hassall; BIDS 1.8.0) provides behavioral responses, event timing (including note onsets), and raw EEG (32 channels, 1000 Hz, EEGLAB format). Our pipeline uses behavioral and event data for all runs, and adds EEG band-power features when the raw \texttt{.set}/\texttt{.fdt} files are available (e.g., after downloading via DataLad or OpenNeuro).
+\end{itemize}
 
 \section{Methods}
-What did you do?  Be as precise as you can.   For full credit there should be enough detail for someone relatively skilled to replicate your work.  (approx 7 points)
 
-\subsection{Data}
-Openneuro dataset \autocite{dataset}
-\subsection{Modeling Approach/Pipeline}
+\subsection{Dataset and Variables}
+
+\begin{itemize}[leftmargin=*]
+    \item \textbf{Source:} OpenNeuro ds005876, version 1.0.1 (Song Familiarity).
+    \item \textbf{Participants:} 29 individuals (sub-01 through sub-30, excluding sub-08).
+    \item \textbf{Design:} Each participant completed multiple trials. On each trial, a melody played; participants pressed the spacebar when the song felt familiar (familiarity RT), then identified the song (free recall and multiple choice).
+    \item \textbf{Outcome:} We predicted \textbf{familiarity response time (RT)} in seconds, using only trials where the participant responded (i.e., indicated familiarity). Non-responses were excluded from the regression.
+    \item \textbf{Behavioral variables:} From each subject's \texttt{*\_beh.tsv}: trial number, song identifier, song duration (\texttt{songDur}), whether they responded (\texttt{responded}), RT (\texttt{rt}), and demographics from \texttt{participants.tsv} (age, sex, handedness).
+    \item \textbf{Event-derived features:} From each subject's \texttt{*\_events.tsv} we identified trial boundaries (event value 1 with stimulus filename) and counted \textbf{note onsets} (\texttt{noteOnset}) within each trial. We defined \textbf{note count} and \textbf{note rate} (notes per second) as proxies for melodic density/tempo.
+    \item \textbf{EEG-derived features (optional):} When raw EEG (\texttt{.set}/\texttt{.fdt}) are on disk, we run \texttt{extract\_eeg\_features.py}: load continuous EEG with MNE-Python, epoch the first 2 seconds of each trial from song onset, compute power spectral density (Welch), and average power in four bands---\textbf{delta} (1--4 Hz), \textbf{theta} (4--8 Hz), \textbf{alpha} (8--13 Hz), \textbf{beta} (13--30 Hz)---averaged across channels. These are merged onto the trial table by participant and trial index.
+\end{itemize}
+
+\subsection{Data Pipeline and Feature Construction}
+
+\begin{enumerate}[leftmargin=*]
+    \item \textbf{Behavioral loading:} All \texttt{sub-*/beh/*\_beh.tsv} files were concatenated with a participant ID.
+    \item \textbf{Event processing:} For each participant, we parsed the corresponding \texttt{*\_events.tsv}, segmented trials by trial-start events, and counted note onsets per trial. We merged these counts (and derived note rate) onto the behavioral table by participant and trial order.
+    \item \textbf{EEG features (optional):} If \texttt{eeg\_features.csv} exists (from \texttt{extract\_eeg\_features.py}), we merge delta, theta, alpha, and beta power onto the trial table.
+    \item \textbf{Numeric RT:} The \texttt{rt} column contains \texttt{"n/a"} when the participant did not respond; we coerced it to numeric and dropped rows with missing RT for modeling.
+    \item \textbf{Predictors:} Final feature set: \textbf{songDur}, \textbf{note\_count}, \textbf{note\_rate}, \textbf{age}, \textbf{sex}, \textbf{handedness}, and when available \textbf{delta}, \textbf{theta}, \textbf{alpha}, \textbf{beta}. Sex and handedness were one-hot encoded (reference categories: F, L).
+    \item \textbf{Missing values:} Missing numeric features were filled with the median per column.
+\end{enumerate}
+
+\subsection{Models and Evaluation}
+
+\begin{itemize}[leftmargin=*]
+    \item \textbf{Models:} We fit two regressors: \textbf{Ridge regression} (L2 penalty, alpha = 1.0) and \textbf{Random Forest} (100 trees, max depth 10). For Ridge, predictors were standardized (zero mean, unit variance).
+    \item \textbf{Cross-validation:} 5-fold cross-validation (shuffle, \texttt{random\_state = 42}). We report mean and standard deviation of \textbf{mean absolute error (MAE)} in seconds and \textbf{$R^2$} across folds.
+    \item \textbf{Interpretation:} For Ridge we report standardized coefficients; for Random Forest we report Gini importance of each feature.
+\end{itemize}
+
+\subsection{Reproducibility}
+
+\begin{itemize}[leftmargin=*]
+    \item Code: \texttt{analysis/extract\_eeg\_features.py} (EEG band power when data on disk), \texttt{analysis/build\_features.py} (feature construction), \texttt{analysis/train\_model.py} (training and CV).
+    \item Input: \texttt{ds005876/} (BIDS layout). EEG data (\texttt{.set}/\texttt{.fdt}) must be retrieved (e.g., \texttt{git annex get} in a DataLad clone, or download from OpenNeuro) for EEG features to be included.
+    \item Output: \texttt{analysis/eeg\_features.csv} (if EEG run), \texttt{analysis/trial\_features.csv}, \texttt{analysis/model\_results.txt}, and coefficient/importance tables.
+\end{itemize}
 
 \section{Results}
-We discovered What did you discover? How well did it work?  As this is a class project, it is likely that many things did not work as well as planned.  For this project, detailing what went wrong is as important as describing what went well.  (approx 7 points)
 
-\subsection{Descriptive Statistics}
-\subsection{Main Analysis}
-\subsection{Model results}
+\subsection{Data Summary}
 
+Across all participants we obtained \textbf{2,074} total trials in the merged behavioral table. Of these, \textbf{1,030} trials contained a familiarity response with a valid numeric reaction time, meaning that roughly half of the melodies prompted listeners to indicate that the song felt familiar. This proportion seems reasonable for a mix of well-known and less familiar tunes: some clips are recognized quickly, others never quite cross the familiarity threshold within the time window.
+
+Descriptive plots (generated by the scripts in \texttt{visuals/}) show that the age distribution is fairly typical for an undergraduate sample, and that no single participant overwhelmingly dominates the trial count. Reaction times have the expected long right tail, with many responses clustered in the first several seconds and a smaller number of very late keypresses. Together, these patterns suggest that the dataset is reasonably well-behaved and suitable for modeling.
+
+\subsection{Predictive Performance (5-fold CV)}
+
+We evaluated both regression models using 5-fold cross-validation on the 1,030 responded trials:
+
+\begin{table}[h!]
+\centering
+\begin{tabular}{lcc}
+\toprule
+\textbf{Model} & \textbf{MAE (s)} & \textbf{$R^2$} \\
+\midrule
+Ridge & 1.639 $\pm$ 0.099 & 0.114 $\pm$ 0.043 \\
+Random Forest & 1.549 $\pm$ 0.100 & 0.197 $\pm$ 0.089 \\
+\bottomrule
+\end{tabular}
+\caption{Cross-validated model performance on responded trials.}
+\end{table}
+
+In absolute terms, both models produced prediction errors of roughly \textbf{1.6 seconds} (MAE = 1.639 s for Ridge, 1.549 s for Random Forest). This is not trivial relative to typical reaction times in the task, but it seems plausible given that the models only see a small set of behavioral and event-derived features. The \textbf{Random Forest} achieved consistently lower MAE and higher $R^2$ than Ridge, suggesting that it is able to capture some nonlinear structure in the data that the linear model misses.
+
+At the same time, the \textbf{$R^2$ values are modest} (about 0.11 for Ridge and 0.20 for Random Forest, with noticeable variability across folds). This pattern indicates that the current feature set explains only a relatively small portion of the variability in recognition time. That outcome is not too surprising: we do not yet include EEG signals, detailed properties of the audio stimuli, or explicit song identity, all of which likely carry additional information about when a melody will ``click'' for a listener.
+
+\subsection{Feature Importance and Coefficients}
+
+Inspection of the fitted models reveals a consistent picture about which predictors matter most.
+
+In the \textbf{Ridge} model (with standardized predictors), \textbf{song duration} has the largest positive coefficient. Longer clips are associated with longer reaction times, which makes intuitive sense because listeners may need to hear more of a melody before recognizing it, especially for tunes that are not instantly obvious. \textbf{Age} shows a negative coefficient, suggesting that older participants in this sample tended to recognize melodies slightly faster than younger ones. One possible explanation is that older participants may simply be more familiar with a larger portion of the stimulus set, although we cannot confirm that directly here.
+
+The two note-based measures contribute more subtle effects. \textbf{Note rate} (notes per second) has a small positive weight, whereas \textbf{note count} has a small negative weight. This combination appears to suggest that denser melodies may slightly delay recognition, perhaps because there is more information to process in a short time window, but that the total number of notes within a trial is less important once duration is taken into account. Dummy variables for \textbf{sex} and \textbf{handedness} have comparatively small coefficients, implying that they play only a minor role in predicting RT in this dataset.
+
+The \textbf{Random Forest} feature importance scores tell a very similar story. \textbf{Song duration} accounts for the majority of the importance (around 0.60), followed by \textbf{age} (around 0.28), while all other predictors---note rate, note count, sex, and handedness---contribute only small additional amounts. This pattern reinforces the idea that, within the limited set of features we used, \textbf{how long the song has been playing} and \textbf{who is listening} are the primary drivers of recognition time, whereas our simple proxy for melodic density plays a secondary role.
+
+\subsection{What Worked and What Did Not}
+
+From a pipeline perspective, several pieces worked as intended. We were able to go from raw BIDS behavioral and event files to a clean trial-level table, attach interpretable features, and run cross-validated models whose performance and direction of effects pass basic sanity checks. We also implemented an EEG band-power extraction step (using MNE-Python to compute delta, theta, alpha, and beta power in the first 2 seconds of each trial) that integrates cleanly into the same feature table when the underlying \texttt{.set}/\texttt{.fdt} files are available.
+
+However, the specific results reported in this section use only behavioral and event-derived predictors. In our working copy of the dataset, the large EEG files are stored in git-annex and were not fully retrieved, so \texttt{extract\_eeg\_features.py} produced an empty EEG feature table. As a result, we cannot yet say whether adding neural measures would meaningfully improve prediction over the behavioral features alone. We also did not incorporate any stimulus-level spectral information from the audio (for example, tempo or spectral centroid), which likely captures additional aspects of how easy or hard a melody is to recognize.
+
+Taken together, the results suggest that a simple behavioral model can recover sensible effects of song duration and participant age, but that a large portion of the variance in recognition time remains unexplained. This gap likely reflects both unmeasured stimulus properties and individual differences, and it points toward EEG and richer audio features as promising next steps rather than as guarantees of success.
 
 \section{Discussion}
-Upon What did you learn?  What could you do better? (What would you
-have done next if you had more time)?.....  Why do you think it didn't work if it didn't?  
-If everything worked perfectly,  what next steps would you suggest for follow-up work.  For full credit discuss two extensions or improvements to your project with short justifications for why you think that would work better (improvements) or why they are promising extensions. (approx 7 points)
 
-\subsection{Limitations}
+\subsection{Interpretation}
 
-\subsection{Future Work}
+\begin{itemize}[leftmargin=*]
+    \item \textbf{Song duration} strongly predicted RT: the longer the clip, the longer participants tended to take to press the key. This could reflect both more time needed to recognize less salient melodies and the fact that RT is bounded by how long the clip has been playing.
+    \item \textbf{Age} was associated with shorter RTs in our model, which could reflect cohort familiarity with the stimulus set or other individual differences; the direction should be interpreted cautiously given the sample size and design.
+    \item \textbf{Note rate} (notes per second) had a small positive association with RT in Ridge, suggesting that denser melodies might slightly delay recognition in this task, though the effect was modest compared to duration and age.
+\end{itemize}
 
-\printbibliography
+\subsection{Strengths and Limitations}
+
+\begin{itemize}[leftmargin=*]
+    \item \textbf{Strengths:} Clear question (predictors of recognition time); use of a public, BIDS-formatted dataset; transparent data and code pipeline; cross-validated evaluation; discussion of what was and was not possible with the available data.
+    \item \textbf{Limitations:} No raw EEG or spectral features in the reported results; no song-level familiarity or genre in the model; modest $R^2$; possible confounds (e.g., trial order, stimulus set composition).
+\end{itemize}
+
+\subsection{Extensions and Future Work}
+
+\begin{enumerate}[leftmargin=*]
+    \item \textbf{Expand EEG features.} We now include band power (delta, theta, alpha, beta) from the first 2 seconds of each trial when EEG is available. Extensions could add ERP components (e.g., P300) in the pre-response window, or longer or variable-length epochs, to capture neural correlates of recognition more directly.
+    \item \textbf{Song identity and familiarity strength.} Including song ID (or a subject-specific familiarity rating) could capture which melodies are recognized faster across participants. One could also model trial-level accuracy (e.g., multiple-choice outcome) as a secondary outcome or predictor.
+\end{enumerate}
+
+\section{References}
+
+\begin{itemize}[leftmargin=*]
+    \item Girard, J. R., Bishop, A. M., \& Hassall, C. D. \emph{Song Familiarity dataset}. OpenNeuro. \url{https://openneuro.org/datasets/ds005876/versions/1.0.1}
+    \item Kostic, B., \& Cleary, A. M. (2009). Song recognition without identification: When people cannot ``name that tune'' but can recognize it as familiar. \emph{Journal of Experimental Psychology: General}. Supplemental materials: \url{https://supp.apa.org/psycarticles/supplemental/a0014584/a0014584_supp.html}
+\end{itemize}
+
+\vspace{1em}
+\noindent\emph{Code and feature tables are in the repository under \texttt{analysis/} and \texttt{visuals/}.}
 
 \end{document}
