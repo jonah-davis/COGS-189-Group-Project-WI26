@@ -20,5 +20,6 @@ build/
 # Jupyter
 .ipynb_checkpoints/
 
-# Optional: uncomment to avoid committing large data (get from OpenNeuro)
-# ds005876/
+# Keep only the dataset retrieval instructions in-repo.
+ds005876/*
+!ds005876/README.md

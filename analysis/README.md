@@ -1,44 +1,29 @@
-# Analysis — Song Familiarity Recognition Time
+# Notebook-Derived Analysis Outputs
 
-This folder contains the data pipeline and predictive modeling for the COGS 189 song familiarity project.
+This directory now contains the artifacts produced by the notebook workflow in [`notebooks/`](/Users/jonahdavis/COGS-189-Group-Project-WI26/notebooks).
 
-## Steps
+## Notebook Order
 
-0. **Optional — EEG band-power features:** If raw EEG (`.set`/`.fdt`) are on disk (e.g. after `git annex get` in a DataLad clone, or download from [OpenNeuro ds005876](https://openneuro.org/datasets/ds005876)):
-   ```bash
-   python analysis/extract_eeg_features.py
-   ```
-   Writes `eeg_features.csv` (delta, theta, alpha, beta per trial). If data are missing, writes an empty file and the pipeline continues without EEG.
+1. [`song_familiarity_dataset_eda.ipynb`](/Users/jonahdavis/COGS-189-Group-Project-WI26/notebooks/song_familiarity_dataset_eda.ipynb)
+2. [`song_familiarity_analysis_ready.ipynb`](/Users/jonahdavis/COGS-189-Group-Project-WI26/notebooks/song_familiarity_analysis_ready.ipynb)
+3. [`csp_lda_familiarity_modellability.ipynb`](/Users/jonahdavis/COGS-189-Group-Project-WI26/notebooks/csp_lda_familiarity_modellability.ipynb)
 
-1. **Build trial-level features** (behavioral + event-derived + EEG when available):
-   ```bash
-   python analysis/build_features.py
-   ```
-   Reads from `../ds005876/`, merges `eeg_features.csv` if present, writes `trial_features.csv`.
+## Files Kept Here
 
-2. **Train models and report CV metrics**:
-   ```bash
-   pip install -r analysis/requirements.txt
-   python analysis/train_model.py
-   ```
-   Produces `model_results.txt`, `ridge_coefficients.csv`, `rf_feature_importance.csv`.
+- [`analysis_ready_familiarity_trials.csv`](/Users/jonahdavis/COGS-189-Group-Project-WI26/analysis/analysis_ready_familiarity_trials.csv)
+- [`analysis_ready_participant_summary.csv`](/Users/jonahdavis/COGS-189-Group-Project-WI26/analysis/analysis_ready_participant_summary.csv)
+- [`analysis_ready_song_summary.csv`](/Users/jonahdavis/COGS-189-Group-Project-WI26/analysis/analysis_ready_song_summary.csv)
+- [`analysis_ready_eeg_trial_features.csv`](/Users/jonahdavis/COGS-189-Group-Project-WI26/analysis/analysis_ready_eeg_trial_features.csv)
+- [`csp_lda_epoch_cache.npz`](/Users/jonahdavis/COGS-189-Group-Project-WI26/analysis/csp_lda_epoch_cache.npz)
+- [`csp_lda_component_tuning.csv`](/Users/jonahdavis/COGS-189-Group-Project-WI26/analysis/csp_lda_component_tuning.csv)
+- [`csp_lda_grouped_results.csv`](/Users/jonahdavis/COGS-189-Group-Project-WI26/analysis/csp_lda_grouped_results.csv)
+- [`csp_lda_loso_predictions.csv`](/Users/jonahdavis/COGS-189-Group-Project-WI26/analysis/csp_lda_loso_predictions.csv)
+- [`csp_lda_loso_subject_results.csv`](/Users/jonahdavis/COGS-189-Group-Project-WI26/analysis/csp_lda_loso_subject_results.csv)
+- [`csp_lda_within_subject_results.csv`](/Users/jonahdavis/COGS-189-Group-Project-WI26/analysis/csp_lda_within_subject_results.csv)
+- [`export_notebook_plots.py`](/Users/jonahdavis/COGS-189-Group-Project-WI26/analysis/export_notebook_plots.py)
 
-## Outputs
+## Archived Legacy Pipeline
 
-| File | Description |
-|------|-------------|
-| `eeg_features.csv` | (Optional) participant_id, trial_index, delta, theta, alpha, beta. |
-| `trial_features.csv` | One row per trial: beh + note_count, note_rate, demographics; + EEG bands if available. |
-| `model_results.txt` | 5-fold CV MAE and R² for Ridge and RF; coefficients and importance. |
-| `ridge_coefficients.csv` | Standardized Ridge coefficients. |
-| `rf_feature_importance.csv` | Random Forest feature importances. |
+Older script-based analysis files that are not part of the notebook-centered workflow were moved to:
 
-## Predictors
-
-- **songDur** — Song duration (s)  
-- **note_count** — Number of note onsets in the trial (from events)  
-- **note_rate** — note_count / trial duration (notes/s)  
-- **age**, **sex**, **handedness** — Participant demographics  
-- **delta**, **theta**, **alpha**, **beta** — (When EEG on disk) Mean band power in first 2 s of trial (1–4, 4–8, 8–13, 13–30 Hz).  
-
-Target: **rt_numeric** (familiarity response time in seconds), only for trials where the participant responded.
+- [`archive/legacy_analysis_pipeline/analysis/`](/Users/jonahdavis/COGS-189-Group-Project-WI26/archive/legacy_analysis_pipeline/analysis)
