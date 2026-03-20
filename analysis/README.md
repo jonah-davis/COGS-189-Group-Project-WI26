@@ -22,16 +22,6 @@ This directory now contains the artifacts produced by the notebook workflow in [
 - [`csp_lda_within_subject_results.csv`](/Users/jonahdavis/COGS-189-Group-Project-WI26/analysis/csp_lda_within_subject_results.csv)
 - [`export_notebook_plots.py`](/Users/jonahdavis/COGS-189-Group-Project-WI26/analysis/export_notebook_plots.py)
 
-## Standalone Figure Export
-
-Run:
-
-```bash
-/Users/jonahdavis/anaconda3/bin/python analysis/export_notebook_plots.py
-```
-
-Output goes to [`visuals/figures/notebook_plots/`](/Users/jonahdavis/COGS-189-Group-Project-WI26/visuals/figures/notebook_plots).
-
 ## Archived Legacy Pipeline
 
 Older script-based analysis files that are not part of the notebook-centered workflow were moved to:
