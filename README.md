@@ -1,6 +1,6 @@
-# COGS 189 Group Project — Song Familiarity
+# Neural Signatures of Song Familiarity: An EEG Decoding Study
 
-This repository is now organized around the analysis and figures produced in [`notebooks/`](/Users/jonahdavis/COGS-189-Group-Project-WI26/notebooks). The core workflow is exploratory data analysis, feature construction, and EEG familiarity modeling performed in Jupyter notebooks against the OpenNeuro Song Familiarity dataset (`ds005876`).
+The central question of this study was whether trial-level EEG recorded during song listening could predict whether a participant would judge a song as familiar. More specifically, we  are interested not only in whether familiarity could be classified within the dataset, but whether any familiarity-related signal would generalize across participants under participant-aware validation. To address this, we combined a descriptive analysis of the OpenNeuro \texttt{ds005876} dataset with an EEG-only decoding pipeline based on CSP and LDA.
 
 ## Team
 
@@ -17,8 +17,6 @@ Run the notebooks in this order:
 2. [`song_familiarity_analysis_ready.ipynb`](/Users/jonahdavis/COGS-189-Group-Project-WI26/notebooks/song_familiarity_analysis_ready.ipynb)
 3. [`csp_lda_familiarity_modellability.ipynb`](/Users/jonahdavis/COGS-189-Group-Project-WI26/notebooks/csp_lda_familiarity_modellability.ipynb)
 
-The second notebook writes analysis-ready tables to [`analysis/`](/Users/jonahdavis/COGS-189-Group-Project-WI26/analysis), and the third notebook consumes those outputs for the CSP+LDA EEG modeling pass.
-
 ## Repository Layout
 
 | Path | Purpose |
@@ -34,16 +32,6 @@ The second notebook writes analysis-ready tables to [`analysis/`](/Users/jonahda
 ## Data Setup
 
 The dataset is not committed in this branch. To replicate the notebook analysis, retrieve OpenNeuro `ds005876` into the repo as `ds005876/`. See [`ds005876/README.md`](/Users/jonahdavis/COGS-189-Group-Project-WI26/ds005876/README.md) for concrete download options.
-
-## Standalone Plot Export
-
-To regenerate the one-plot-per-file exports:
-
-```bash
-/Users/jonahdavis/anaconda3/bin/python analysis/export_notebook_plots.py
-```
-
-This writes PNGs to [`visuals/figures/notebook_plots/`](/Users/jonahdavis/COGS-189-Group-Project-WI26/visuals/figures/notebook_plots).
 
 ## Source Dataset
 
